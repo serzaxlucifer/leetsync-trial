@@ -1,7 +1,7 @@
 class Solution {
 public:
     vector<int> twoSum(vector<int>& nums, int target) {
-        // hello 
+        // hell
         vector<int> result;
         int diff;
         unordered_map<int, int> mymap;
