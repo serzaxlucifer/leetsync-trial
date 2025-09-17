@@ -1,22 +1,66 @@
-class FoodRatings {
+class Food {
 public:
-    unordered_map<string, set<pair<int, string>>> cuisine_ratings;
-    unordered_map<string, string> food_cuisine;
-    unordered_map<string, int> food_rating;
+    // Store the food's rating.
+    int foodRating;
+    // Store the food's name.
+    string foodName;
+
+    Food(int foodRating, string foodName) {
+        this->foodRating = foodRating;
+        this->foodName = foodName;
+    }
+
+    // Overload the less than operator for comparison
+    bool operator<(const Food& other) const {
+        // If food ratings are the same sort on the basis of their name. (lexicographically smaller name food will be on top)
+        if (foodRating == other.foodRating) {
+            return foodName > other.foodName;
+        }
+        // Sort on the basis of food rating. (bigger rating food will be on top)
+        return foodRating < other.foodRating;
+    }
+};
+
+class FoodRatings {
+    // Map food with its rating.
+    unordered_map<string, int> foodRatingMap;
+    // Map food with the cuisine it belongs to.
+    unordered_map<string, string> foodCuisineMap;
+    
+    // Store all food of a cuisine in priority queue (to sort them on ratings/name)
+    // Priority queue element -> Food: (foodRating, foodName)
+    unordered_map<string, priority_queue<Food>> cuisineFoodMap;
+
+public:
     FoodRatings(vector<string>& foods, vector<string>& cuisines, vector<int>& ratings) {
         for (int i = 0; i < foods.size(); ++i) {
-            cuisine_ratings[cuisines[i]].insert({ -ratings[i], foods[i] });
-            food_cuisine[foods[i]] = cuisines[i];
-            food_rating[foods[i]] = ratings[i];
+            // Store 'rating' and 'cuisine' of current 'food' in 'foodRatingMap' and 'foodCuisineMap' maps.
+            foodRatingMap[foods[i]] = ratings[i];
+            foodCuisineMap[foods[i]] = cuisines[i];
+            // Insert the '(rating, name)' element in current cuisine's priority queue.
+            cuisineFoodMap[cuisines[i]].push(Food(ratings[i], foods[i]));
         }
-    }
+    } 
+    
     void changeRating(string food, int newRating) {
-        auto &cuisine = food_cuisine.find(food)->second;
-        cuisine_ratings[cuisine].erase({ -food_rating[food], food });
-        cuisine_ratings[cuisine].insert({ -newRating, food });
-        food_rating[food] = newRating;
+        // Update food's rating in 'foodRating' map.
+        foodRatingMap[food] = newRating;
+        // Insert the '(new rating, name)' element in respective cuisine's priority queue.
+        auto cuisineName = foodCuisineMap[food];
+        cuisineFoodMap[cuisineName].push(Food(newRating, food));
     }
+    
     string highestRated(string cuisine) {
-        return begin(cuisine_ratings[cuisine])->second;
+        // Get the highest rated 'food' of 'cuisine'.
+        auto highestRated = cuisineFoodMap[cuisine].top();
+        
+        // If the latest rating of 'food' doesn't match the 'rating' on which it was sorted in the priority queue,
+        // then we discard this element of the priority queue.
+        while (foodRatingMap[highestRated.foodName] != highestRated.foodRating) {
+            cuisineFoodMap[cuisine].pop();
+            highestRated = cuisineFoodMap[cuisine].top();
+        }
+        // Return name of the highest rated 'food' of 'cuisine'.
+        return highestRated.foodName;
     }
 };
