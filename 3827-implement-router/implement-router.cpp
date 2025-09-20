@@ -25,6 +25,7 @@ private:
     queue<Packet> q;
     unordered_set<Packet, PacketHash> seen;
     unordered_map<int, vector<int>> destTimes;  // sorted timestamps
+    unordered_map<int, int> st; // magic lies here!
 
 public:
     Router(int memoryLimit) : memoryLimit(memoryLimit) {}
@@ -48,10 +49,7 @@ public:
         q.pop();
         seen.erase(p);
 
-        // remove timestamp
-        auto &vec = destTimes[p.destination];
-        auto it = lower_bound(vec.begin(), vec.end(), p.timestamp);
-        if (it != vec.end() && *it == p.timestamp) vec.erase(it);
+        st[p.destination]++;
 
         return {p.source, p.destination, p.timestamp};
     }
@@ -61,8 +59,9 @@ public:
         if (it == destTimes.end()) return 0;
 
         auto &vec = it->second;
-        auto left = lower_bound(vec.begin(), vec.end(), startTime);
-        auto right = upper_bound(vec.begin(), vec.end(), endTime);
+        int temp = st[destination];
+        auto left = lower_bound(vec.begin() + temp, vec.end(), startTime);
+        auto right = upper_bound(vec.begin() + temp, vec.end(), endTime);
         return right - left;
     }
 };
