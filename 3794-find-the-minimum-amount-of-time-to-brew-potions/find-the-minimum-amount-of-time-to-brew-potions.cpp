@@ -1,19 +1,19 @@
 class Solution {
 public:
-    using ll = long long;
     long long minTime(vector<int>& skill, vector<int>& mana) {
-        int n = skill.size(), m = mana.size();
-        vector<ll> times(n);
-        for (int j = 0; j < m; j++) {
-            ll cur_time = 0;
-            for (int i = 0; i < n; i++) {
-                cur_time = max(cur_time, times[i]) + skill[i] * mana[j];
-            }
-            times[n - 1] = cur_time;
-            for (int i = n - 2; i >= 0; i--) {
-                times[i] = times[i + 1] - skill[i + 1] * mana[j];
-            }
+        const int n=skill.size(), m=mana.size();
+
+        partial_sum(skill.begin(), skill.end(), skill.begin());
+        const int skill0=skill[0];
+        long long start=0;
+
+        for (int j=1; j<m; j++) {
+            const long long curr=mana[j], prev=mana[j-1];
+            long long tMax=skill0*prev;
+            for (int i=1; i<n; i++) 
+                tMax=max(tMax, skill[i]*prev-skill[i-1]*curr);
+            start+=tMax;
         }
-        return times[n - 1];
+        return start+1LL*skill.back()*mana.back();
     }
 };
