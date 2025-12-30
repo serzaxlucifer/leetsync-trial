@@ -1,65 +1,53 @@
 class Solution {
 public:
-    unordered_set<string> bad; // memo for failed states
+    vector<vector<vector<char>>> table;   // 7x7 since chars are A-F (as per constraints)
+    unordered_set<string> bad;            // memo for impossible bottom states
 
-    bool pyramidTransition(string bottom, vector<string>& allowed) 
-    {
-        unordered_map<string, vector<char>> transitionMap;
+    bool pyramidTransition(string bottom, vector<string>& allowed) {
+        table.assign(7, vector<vector<char>>(7));   // reset table
 
-        for (string s : allowed) {
-            string key = s.substr(0, 2);
-            char top = s[2];
-            transitionMap[key].push_back(top);
+        // build fast lookup table
+        for (string &s : allowed) {
+            int a = s[0]-'A', b = s[1]-'A';
+            table[a][b].push_back(s[2]);
         }
 
-        return plough(bottom, transitionMap);
-
+        return dfs(bottom);
     }
 
-    bool plough(string bottomLayer, unordered_map<string, vector<char>>& transitionMap) {
-        if (bottomLayer.length() == 1) 
+    bool dfs(string &bottom) {
+        if (bottom.size() == 1) 
             return true;
 
-        if (bad.count(bottomLayer)) // seen before & failed
+        if (bad.count(bottom))     // already tried & failed
             return false;
 
-        vector<string> possibleTops = generatePossibleTopLayers(bottomLayer, transitionMap);
+        string next(bottom.size()-1, ' ');   // reserve once (no reallocation)
 
-        if (possibleTops.empty()) {
-            bad.insert(bottomLayer);
-            return false;
-        }
+        if (buildNext(0, bottom, next)) 
+            return true;
 
-        for (int i = 0; i < possibleTops.size(); i++) {
-            if (plough(possibleTops[i], transitionMap))
-                return true;
-        }
-
-        bad.insert(bottomLayer);
+        bad.insert(bottom);
         return false;
     }
 
-    vector<string> generatePossibleTopLayers(string bottomLayer, unordered_map<string, vector<char>>& transitionMap) {
+    bool buildNext(int idx, string &bottom, string &next) {
+        // built one complete upper layer
+        if (idx == next.size())
+            return dfs(next);
 
-        vector<string> possibleTops{""};  // initially one empty string
+        int a = bottom[idx]-'A';
+        int b = bottom[idx+1]-'A';
 
-        for (int i = 0; i < bottomLayer.size() - 1; i++) {
+        // no valid blocks → prune instantly
+        if (table[a][b].empty())
+            return false;
 
-            string key = bottomLayer.substr(i, 2);  
-            if (!transitionMap.count(key))
-                return {};   // no transition possible
-
-            vector<string> intermediate;
-            vector<char>& candidates = transitionMap[key];
-
-            for (char c : candidates) {
-                for (string s : possibleTops) {
-                    intermediate.push_back(s + c);
-                }
-            }
-
-            possibleTops = intermediate;
+        for (char c : table[a][b]) {
+            next[idx] = c;                   // place char in next row
+            if (buildNext(idx+1, bottom, next))
+                return true;
         }
-        return possibleTops;
+        return false;
     }
 };
