@@ -1,48 +1,53 @@
 class Solution {
 public:
-    vector<vector<int>> dir = {{0,1},{1,0},{0,-1},{-1,0}}; // row,col
-
     int latestDayToCross(int row, int col, vector<vector<int>>& cells) {
-        int lo = 0, hi = cells.size(), ans = 0;
+        int left = 1, right = cells.size(), ans = 0;
 
-        while(lo <= hi){
-            int mid = (lo + hi) / 2;
-
-            vector<vector<int>> grid(row, vector<int>(col,0));
-
-            for(int i = 0; i < mid; i++){
-                grid[cells[i][0]-1][cells[i][1]-1] = 1; // mark water correctly
+        while(left <= right) {
+            int mid = (left + right) / 2;
+            if(canCross(row, col, cells, mid)) {
+                ans = mid;         // we can cross on mid
+                left = mid + 1;    // try later day
+            } else {
+                right = mid - 1;   // try earlier day
             }
-
-            if(canCross(grid)){
-                ans = mid;
-                lo = mid + 1;
-            } else hi = mid - 1;
         }
         return ans;
     }
 
-    bool canCross(vector<vector<int>>& grid){
-        int col = grid[0].size();
+    bool canCross(int row, int col, vector<vector<int>>& cells, int day) {
+        vector<vector<int>> grid(row, vector<int>(col, 0));
 
-        for(int j = 0; j < col; j++){
-            if(grid[0][j] == 0 && dfs(grid,0,j)) return true;
+        // Flood first 'day' cells as water (1)
+        for(int i = 0; i < day; i++)
+            grid[cells[i][0]-1][cells[i][1]-1] = 1;
+
+        queue<pair<int,int>> q;
+
+        // Push all land cells in top row into BFS
+        for(int j = 0; j < col; j++) {
+            if(grid[0][j] == 0) {
+                q.push({0,j});
+                grid[0][j] = -1; // mark visited
+            }
         }
-        return false;
-    }
 
-    bool dfs(vector<vector<int>>& g,int r,int c){
-        int n = g.size(), m = g[0].size();
-        if(r < 0 || r >= n || c < 0 || c >= m) return false;
-        if(g[r][c] != 0) return false;
+        vector<vector<int>> dir = {{1,0},{-1,0},{0,1},{0,-1}};
 
-        if(r == n-1) return true; // reached bottom
+        while(!q.empty()) {
+            auto [r,c] = q.front(); q.pop();
 
-        g[r][c] = -1; // visited
+            if(r == row-1) return true; // reached bottom row
 
-        for(auto &d:dir)
-            if(dfs(g, r+d[0], c+d[1])) return true;
+            for(auto &d: dir) {
+                int nr = r + d[0], nc = c + d[1];
 
+                if(nr >= 0 && nr < row && nc >= 0 && nc < col && grid[nr][nc] == 0) {
+                    grid[nr][nc] = -1;   // mark visited
+                    q.push({nr,nc});
+                }
+            }
+        }
         return false;
     }
 };
