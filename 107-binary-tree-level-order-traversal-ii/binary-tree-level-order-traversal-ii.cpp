@@ -12,26 +12,22 @@
 class Solution {
 public:
     vector<vector<int>> levelOrderBottom(TreeNode* root) {
-        vector<vector<int>> answer;
-        map<int, vector<int>> myMap;
-        dfs(root, myMap, 0);
-
-        for (auto it = myMap.rbegin(); it != myMap.rend(); ++it) {
-            answer.push_back(it->second);
+        vector<vector<int>> ans;
+        if(root == NULL) return ans;
+        queue<TreeNode*> q;
+        q.push(root);
+        while(!q.empty()){
+            int size = q.size();
+            vector<int> temp;
+            for(int i=0;i<size;i++){
+                TreeNode* node = q.front();
+                q.pop();
+                if(node->left) q.push(node->left);
+                if(node->right) q.push(node->right);
+                temp.push_back(node->val);
+            }
+            ans.insert(ans.begin(),temp);
         }
-
-        return answer;
-    }
-
-    void dfs(TreeNode* root, map<int, vector<int>>& myMap, int height) {
-        if (root == nullptr) {
-            return;
-        }
-
-        int value = root->val;
-        myMap[height].push_back(value);
-
-        dfs(root->left, myMap, height + 1);
-        dfs(root->right, myMap, height + 1);
+        return ans;
     }
 };
