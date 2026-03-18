@@ -1,21 +1,16 @@
 class Solution {
 public:
     int maxProfit(vector<int>& prices) {
-        int n = prices.size();
+        int buy1 = INT_MIN, buy2 = INT_MIN;
+        int sell1 = 0, sell2 = 0;
 
-        vector<vector<int>> ahead(3, vector<int>(2, 0)), cur(3, vector<int>(2, 0));
-
-        for (int i = n - 1; i >= 0; i--) {
-            for (int cap = 1; cap <= 2; cap++) {
-                // buy = 1
-                cur[cap][1] = max(-prices[i] + ahead[cap][0], ahead[cap][1]);
-
-                // buy = 0
-                cur[cap][0] = max(prices[i] + ahead[cap-1][1], ahead[cap][0]);
-            }
-            ahead = cur;
+        for (int price : prices) {
+            buy1 = max(buy1, -price);
+            sell1 = max(sell1, buy1 + price);
+            buy2 = max(buy2, sell1 - price);
+            sell2 = max(sell2, buy2 + price);
         }
 
-        return ahead[2][1];
+        return sell2;
     }
 };
