@@ -1,40 +1,21 @@
 class Solution {
 public:
     int maxProfit(vector<int>& prices) {
-        vector<vector<vector<int>>> dp(2, vector<vector<int>>(2, vector<int>(prices.size(), -1)));
-        
-        // for (int i = 0; i < prices.size(); i++) {
-        //     int stockPrice = prices[i];
+        int n = prices.size();
 
-        //     // If this is the first transaction
-        //     if (dp[0][i - 1])
-        // }
+        vector<vector<int>> ahead(3, vector<int>(2, 0)), cur(3, vector<int>(2, 0));
 
-        return findMax(prices, 0, 2, true, dp);
-    }
+        for (int i = n - 1; i >= 0; i--) {
+            for (int cap = 1; cap <= 2; cap++) {
+                // buy = 1
+                cur[cap][1] = max(-prices[i] + ahead[cap][0], ahead[cap][1]);
 
-    int findMax(vector<int>& prices, int cur, int cap, bool buy, vector<vector<vector<int>>>& dp) {
-        if (cur == prices.size()) {
-            return 0;
-        }
-        if (cap == 0) {
-            return 0;
+                // buy = 0
+                cur[cap][0] = max(prices[i] + ahead[cap-1][1], ahead[cap][0]);
+            }
+            ahead = cur;
         }
 
-        int dpIndex = buy ? 1 : 0;
-
-        if (dp[cap-1][dpIndex][cur] != -1) {
-            return dp[cap-1][dpIndex][cur];
-        }
-        
-        int profit = 0;
-
-        if (buy) {
-            profit = max(findMax(prices, cur + 1, cap, false, dp) -  prices[cur], findMax(prices, cur + 1, cap, true, dp));
-        } else {
-            profit = max(prices[cur] + findMax(prices, cur + 1, cap - 1, true, dp), findMax(prices, cur + 1, cap, false, dp));
-        }
-
-        return dp[cap-1][dpIndex][cur] = profit;
+        return ahead[2][1];
     }
 };
