@@ -1,19 +1,27 @@
 class Solution {
 public:
     int numFriendRequests(vector<int>& ages) {
-        sort(ages.begin(), ages.end());
-        int answer = 0;
-        int leftPtr = 0, rightPtr = 0;
-
-        for (int i = 0; i < ages.size(); i++) {
-            int curAge = ages[i];
-            if (curAge <= 14) continue;
-
-            while (ages[leftPtr] <= 0.5*curAge + 7) leftPtr++;
-            while (rightPtr + 1 < ages.size() && ages[rightPtr + 1] <= ages[i]) rightPtr++;
-
-            answer += (rightPtr - leftPtr);
+        int map[121] = {0};
+        for (int i : ages) {
+            map[i]++;
         }
+
+        vector<int> pref(121, 0);
+        for (int i = 1; i <= 120; i++) {
+            pref[i] = pref[i - 1] + map[i];
+        }
+
+        int answer = 0;
+
+        for(int i = 15; i <= 120; i++) {
+            if (map[i] == 0) continue;
+            int lb = 0.5*i + 7;
+            int rb = i;
+
+            int total = pref[rb] - pref[lb];
+            answer += map[i] * (total - 1);
+        }
+
 
         return answer;
     }
