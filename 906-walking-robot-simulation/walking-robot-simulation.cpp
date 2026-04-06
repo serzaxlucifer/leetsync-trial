@@ -1,60 +1,51 @@
 class Solution {
 public:
-    int directions[4][2] = {{0, 1}, {-1, 0}, {0, -1}, {1, 0}};
-    
-    struct pair_hash {
-        size_t operator()(const pair<int,int>& p) const {
-            return hash<long long>()(((long long)p.first << 32) | p.second);
-        }
-    };
-
     int robotSim(vector<int>& commands, vector<vector<int>>& obstacles) {
-        int startingIndex = 0;
-        int maxDistance = 0;
+        
+        // Directions: North, East, South, West (clockwise)
+        int directions[4][2] = {
+            {0,1}, {1,0}, {0,-1}, {-1,0}
+        };
+        
+        unordered_set<long long> obstacleSet;
+
+        // Encode obstacles
+        for (auto &o : obstacles) {
+            long long key = ((long long)o[0] << 32) | (o[1] & 0xffffffff);
+            obstacleSet.insert(key);
+        }
+
+        int dir = 0; // 0 = North
         int x = 0, y = 0;
+        int maxDist = 0;
 
-        unordered_set<pair<int,int>, pair_hash> obstaclesSet;
+        for (int cmd : commands) {
 
-        for (auto& i : obstacles) {
-            obstaclesSet.insert({i[0], i[1]});
-        }
-
-        for (int val : commands) {
-
-            if (val == -1) {
-                startingIndex = normalizePt(startingIndex - 1);
-                continue;
+            if (cmd == -1) { // turn right
+                dir = (dir + 1) % 4;
             } 
-            if (val == -2) {
-                startingIndex = normalizePt(startingIndex + 1);
-                continue;
-            }
+            else if (cmd == -2) { // turn left
+                dir = (dir + 3) % 4; // same as (dir - 1 + 4) % 4
+            } 
+            else {
+                for (int step = 0; step < cmd; step++) {
 
-            for (int m = 0; m < val; m++) {
-                auto s = getNextPos(x, y, startingIndex);
-                int newX = s[0], newY = s[1];
+                    int nx = x + directions[dir][0];
+                    int ny = y + directions[dir][1];
 
-                if (obstaclesSet.find({newX, newY}) != obstaclesSet.end()) {
-                    break;
+                    long long key = ((long long)nx << 32) | (ny & 0xffffffff);
+
+                    // Stop if obstacle
+                    if (obstacleSet.count(key)) break;
+
+                    x = nx;
+                    y = ny;
+
+                    maxDist = max(maxDist, x*x + y*y);
                 }
-
-                x = newX;
-                y = newY;
-
-                maxDistance = max(maxDistance, x*x + y*y);
             }
         }
 
-        return maxDistance;
-    }
-
-    int normalizePt(int index) {
-        if (index == -1) return 3;
-        if (index == 4) return 0;
-        return index;
-    }
-
-    vector<int> getNextPos(int x, int y, int idx) {
-        return {x + directions[idx][0], y + directions[idx][1]};
+        return maxDist;
     }
 };
